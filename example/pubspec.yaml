@@ -1,0 +1,33 @@
+name: nova_printer_plugin_example
+description: Demonstrates how to use the nova_printer_plugin plugin.
+
+publish_to: "none"
+
+environment:
+  sdk: ">=2.19.6 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  nova_printer_plugin:
+    path: ../
+  usb_serial_for_android:
+    path: "./packages/usb_serial_for_android"
+
+  cupertino_icons: ^1.0.2
+  json_annotation: 4.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+  json_serializable: 6.7.1
+  build_runner: 2.4.6
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/test.jpg
+    - assets/test_print.jpg
