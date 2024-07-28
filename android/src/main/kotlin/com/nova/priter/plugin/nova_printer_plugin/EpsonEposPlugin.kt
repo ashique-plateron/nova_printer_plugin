@@ -252,7 +252,7 @@ class EpsonEposPlugin(private val context: Context) {
                 resp.success = false
                 resp.message = "Can not connect to the printer."
                 result.success(resp.toJSON())
-                Log.e("logTag", "Cannot ConnectPrinter $resp")
+                Log.e(logTag, "Cannot ConnectPrinter $resp")
             } else {
                 mPrinter!!.clearCommandBuffer()
                 commands.forEach {
@@ -335,7 +335,7 @@ class EpsonEposPlugin(private val context: Context) {
         }
     }
 
-    fun connectPrinter(target: String, series: String): Boolean {
+    private fun connectPrinter(target: String, series: String): Boolean {
         val printCons = getPrinterConstant(series)
         if (mPrinter == null || mTarget != target) {
             if (mPrinter != null) {

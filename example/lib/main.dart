@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nova_printer_plugin/plugin.dart';
-import 'package:nova_printer_plugin_example/citizen_printer_model.dart';
 import 'package:usb_serial_for_android/usb_serial_for_android.dart';
 
 void main() {
@@ -74,6 +73,13 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> discoverPrinter() async {
     List<EpsonPrinterModel> epsonPrinters = [];
+    NovaPrinterPlugin.onCitizenPrint(
+      printer: CitizenPrinter(
+        connectionMode: "USB",
+      ),
+      params: _commands.map((e) => e.toJson()).toList(),
+    );
+
     epsonPrinters = await NovaPrinterPlugin.onDiscovery(
       type: EpsonEPOSPortType.USB,
     );
@@ -94,89 +100,24 @@ class _MyAppState extends State<MyApp> {
   Future<void> printData({required Printer printer}) async {
     var imageData = await rootBundle.load('assets/test_print.jpg');
     var b = imageData.buffer.asUint8List();
-    switch (printer.manufacturerName) {
-      case ManufactureName.Epson:
-        var epsonPrinter = EpsonPrinterModel.fromMap(
-          Map.from(printer.properties),
-        );
-        await NovaPrinterPlugin.onPrint(
-          printer: epsonPrinter,
-          commands: printer.getCommands2(
-            [
-              // AddTextSmoothCommand(
-              //   attributes: AddTextSmoothAttributes(
-              //     addTextSmooth: true,
-              //   ),
-              // ),
-              // PrintTextCommand(
-              //   attributes: PrintTextAttributes(
-              //     fontType: PrintFont.FONT_B,
-              //     text:
-              //         '''123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123''',
-              //     style: PrintTextStyle(bold: false),
-              //     size: {
-              //       'width': 2,
-              //       'height': 2,
-              //     },
-              //   ),
-              // ),
-              // PrintImage(
-              //   attributes: PrintImageAttributes(
-              //     // width: 500,
-              //     // height: 400,
-              //     // posX: 50,
-              //     // posY: 50,
-              //     bitmap: b,
-              //   ),
-              // ),
-              // PrintTextCommand(
-              //   type: PrintCommandId.AddDivider,
-              //   attributes: PrintDividerAttribute(
-              //     symbol: '-',
-              //     style: PrintTextStyle(bold: false),
-              //     size: {
-              //       'width': 2,
-              //       'height': 2,
-              //     },
-              //   ),
-              // ),
-              AddFeedlineCommand(
-                attributes: FeedlineAttributes(lines: 10),
-              ),
-              // PrintRawData(
-              //   attributes: PrintRawDataAttributes(
-              //     rawData: Uint8List.fromList([0, 2, 5, 7]),
-              //   ),
-              // ),
-
-              // AddCutCommand(),
-            ],
+    await printer.print(
+      [
+        PrintImage(
+          attributes: PrintImageAttributes(
+            width: 500,
+            height: 400,
+            posX: 50,
+            posY: 50,
+            bitmap: b,
           ),
-        );
-        break;
-      case ManufactureName.Citizen:
-        await NovaPrinterPlugin.onCitizenPrint(
-          params: {
-            "connectionType": 3,
-            "address": null,
-            // "commands": (printer as CitizenPrinter).getCitizenCommands([
-            // CitizenTextCommands(
-            //   text: "CITIZEN TEST PRINT",
-            //   reverse: true,
-            //   alignment: CitizenTextAlignment.CENTRE,
-            //   width: CitizenConsts.CMP_TXT_2WIDTH,
-            // ),
-            // ])
-          },
-        );
-        break;
-      default:
-    }
+        ),
+        ..._commands
+      ],
+    );
   }
 
   Future<void> findCitizenDevice() async {
     List<UsbDevice> devices = await UsbSerial.listDevices();
-
     for (var device in devices) {
       ManufactureName manufacturer =
           ManufactureName.fromValue(device.manufacturerName?.trim());
@@ -202,4 +143,37 @@ class _MyAppState extends State<MyApp> {
       }
     }
   }
+
+  final List<PrintCommands> _commands = [
+    AddTextSmoothCommand(
+      attributes: AddTextSmoothAttributes(
+        addTextSmooth: true,
+      ),
+    ),
+    PrintTextCommand(
+      attributes: PrintTextAttributes(
+        fontType: PrintFont.FONT_B,
+        text:
+            '''123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123''',
+        style: PrintTextStyle(bold: false),
+      ),
+    ),
+    PrintTextCommand(
+      type: PrintCommandId.AddDivider,
+      attributes: PrintDividerAttribute(
+        symbol: '-',
+        style: PrintTextStyle(bold: false),
+      ),
+    ),
+    AddFeedlineCommand(
+      attributes: FeedlineAttributes(lines: 10),
+    ),
+    PrintRawData(
+      attributes: PrintRawDataAttributes(
+        rawData: Uint8List.fromList([0, 2, 5, 7]),
+      ),
+    ),
+
+    // AddCutCommand(),
+  ];
 }
