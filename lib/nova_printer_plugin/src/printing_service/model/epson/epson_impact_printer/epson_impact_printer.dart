@@ -33,19 +33,19 @@ class EpsonImpactPrinter extends Printer {
   Future<PrintResult> print(List<PrintCommands> commands) async {
     var printer = EpsonPrinterModel.fromMap(Map.from(properties));
     try {
-      PrinterQueue().addToQueue(() async {
-        var printResult = await NovaPrinterPlugin.onPrint(
-          printer: printer,
-          commands: getCommands(commands),
-        );
-        if (printResult != null) {
-          EpsonPrinterResponse r =
-              EpsonPrinterResponse.fromRawJson(printResult);
-          if (!r.success) {
-            return PrintResult.failed;
+      PrinterQueue().addToQueue(
+        () async {
+          var printResult = await NovaPrinterPlugin.onPrint(
+            printer: printer,
+            commands: getCommands(commands),
+          );
+          if (printResult != null) {
+            EpsonPrinterResponse r =
+                EpsonPrinterResponse.fromRawJson(printResult);
+            if (!r.success) return PrintResult.failed;
           }
-        }
-      });
+        },
+      );
       return PrintResult.success;
     } catch (e) {
       rethrow;

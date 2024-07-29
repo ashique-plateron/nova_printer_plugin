@@ -49,8 +49,7 @@ class _MyAppState extends State<MyApp> {
                       Printer printer = printers[index];
                       return Row(
                         children: [
-                          Text(printer.manufacturerName.name +
-                              (" ${printer.properties['model'] ?? ''}")),
+                          Text((" ${printer.displayName}")),
                           const Spacer(),
                           ElevatedButton(
                             onPressed: () {
@@ -72,27 +71,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> discoverPrinter() async {
-    List<EpsonPrinterModel> epsonPrinters = [];
-    NovaPrinterPlugin.onCitizenPrint(
-      printer: CitizenPrinter(
-        connectionMode: "USB",
-      ),
-      params: _commands.map((e) => e.toJson()).toList(),
-    );
+    printers = await NovaPrinterPlugin.discoverPrinters();
 
-    epsonPrinters = await NovaPrinterPlugin.onDiscovery(
-      type: EpsonEPOSPortType.USB,
-    );
-    printers.clear();
-
-    for (EpsonPrinterModel element in epsonPrinters) {
-      EpsonPrinterModel device = element;
-      var json = device.toMap();
-      json['properties'] = {};
-      json['properties'].putIfAbsent('epson', () => device.toMap());
-      var printer = Printer.fromJson(json);
-      printers.add(printer);
-    }
     await findCitizenDevice();
     setState(() {});
   }
@@ -109,6 +89,7 @@ class _MyAppState extends State<MyApp> {
             posX: 50,
             posY: 50,
             bitmap: b,
+            halftone: ImageHalfTone.HALFTONE_ERROR_DIFFUSION,
           ),
         ),
         ..._commands
@@ -119,28 +100,24 @@ class _MyAppState extends State<MyApp> {
   Future<void> findCitizenDevice() async {
     List<UsbDevice> devices = await UsbSerial.listDevices();
     for (var device in devices) {
+      var json = device.toJson();
       ManufactureName manufacturer =
           ManufactureName.fromValue(device.manufacturerName?.trim());
       bool isCitizenPrinter = manufacturer == ManufactureName.Citizen &&
           (device.productName?.toLowerCase().contains('printer') ?? false);
-
-      if (isCitizenPrinter) {
-        printers.add(
-          CitizenPrinter(
-            connectionMode: 'USB',
-            displayName: device.manufacturerName,
-            properties: {
-              'deviceName': device.deviceName,
-              'deviceId': device.deviceId,
-              'productName': device.productName,
-              'vid': device.vid,
-              "pid": device.pid,
-              "serial": device.serial,
-              "port": device.port,
-            },
-          ),
-        );
-      }
+      json['manufacturerName'] = ManufactureName.Citizen.name;
+      json['displayName'] = json['productName'];
+      json['connectionMode'] = ConnectionMode.USB.value;
+      json['properties'] = {
+        'deviceName': device.deviceName,
+        'deviceId': device.deviceId,
+        'productName': device.productName,
+        'vid': device.vid,
+        "pid": device.pid,
+        "serial": device.serial,
+        "port": device.port,
+      };
+      if (isCitizenPrinter) printers.add(Printer.fromJson(json));
     }
   }
 
@@ -173,7 +150,13 @@ class _MyAppState extends State<MyApp> {
         rawData: Uint8List.fromList([0, 2, 5, 7]),
       ),
     ),
-
-    // AddCutCommand(),
+    PrintQRCommand(
+      attributes: PrintQRAttributes(
+        data: "https://www.google.com/",
+        size: 16,
+        alignment: PrintAlign.CENTRE,
+      ),
+    ),
+    AddCutCommand(),
   ];
 }
