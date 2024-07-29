@@ -36,18 +36,17 @@ abstract class Printer {
   Map<String, dynamic> toJson();
 
   factory Printer.fromJson(Map<String, dynamic> json) {
-    bool isEpsonPrinter = json['properties']?['epson'] != null;
-    if (isEpsonPrinter) {
-      Map<String, dynamic> epsonData = Map<String, dynamic>.from(
-        ((json['properties']?['epson']) ?? <String, dynamic>{}),
-      );
-      bool isImpactPrinter = epsonData['model'].contains('TM-U220');
-      if (isImpactPrinter) {
-        return EpsonImpactPrinter.fromJson({'properties': epsonData});
-      }
-      return EpsonPrinter.fromJson({'properties': epsonData});
+    switch (ManufactureName.fromValue(json['manufacturerName'])) {
+      case ManufactureName.Epson:
+        String model = json['model'].toString();
+        bool isImpactPrinter = model.contains('TM-U220');
+        if (isImpactPrinter) return EpsonImpactPrinter.fromJson(json);
+        return EpsonPrinter.fromJson(json);
+      case ManufactureName.Citizen:
+        return CitizenPrinter.fromJson(json);
+      case ManufactureName.None:
+        throw Exception('Unknown Printer');
     }
-    throw Exception('Unknown Printer');
   }
 
   bool get isEpsonPrinter => manufacturerName == ManufactureName.Epson;

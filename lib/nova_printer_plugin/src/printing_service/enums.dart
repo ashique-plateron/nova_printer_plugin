@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 const int kDefaultOrderBillCopies = 1;
 
 enum PrintFormat {
@@ -18,9 +20,10 @@ enum PrintFormat {
 }
 
 enum ConnectionMode {
-  usb("USB"),
-  network("Network"),
-  unknown(null);
+  USB("USB"),
+  TCP("TCP"),
+  BLUETOOTH("BLUETOOTH"),
+  UNKNOWN(null);
 
   final String? value;
   const ConnectionMode(this.value);

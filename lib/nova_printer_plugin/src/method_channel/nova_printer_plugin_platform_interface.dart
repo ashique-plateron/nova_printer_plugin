@@ -25,6 +25,7 @@ abstract class NovaPrinterPluginPlatform extends PlatformInterface {
   }
 
   Future<dynamic> onDiscovery({required String printType});
+  
   Future<dynamic> onPrint({
     required EpsonPrinterModel printer,
     required List<Map<String, dynamic>> commands,

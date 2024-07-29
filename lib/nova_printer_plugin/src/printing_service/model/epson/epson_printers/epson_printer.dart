@@ -11,6 +11,14 @@ class EpsonPrinter extends Printer {
   EpsonPrinter({
     super.manufacturerName = ManufactureName.Epson,
     super.properties = const {},
+    super.refId,
+    super.displayName,
+    super.aliasName,
+    super.restaurantRefId,
+    super.connectionMode,
+    super.createdDate,
+    super.lastModifiedDate,
+    super.foundMatch = true,
   });
 
   factory EpsonPrinter.fromJson(Map<String, dynamic> json) {

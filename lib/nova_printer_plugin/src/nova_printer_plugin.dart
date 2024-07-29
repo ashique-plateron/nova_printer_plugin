@@ -2,10 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:nova_printer_plugin/plugin.dart';
 
 import 'method_channel/nova_printer_plugin_platform_interface.dart';
-import 'printing_service/helpers/epson_epos.dart';
-import 'printing_service/model/citizen/citizen_printer_model.dart';
 
 class NovaPrinterPlugin {
   static final EpsonEPOSHelper _eposHelper = EpsonEPOSHelper();
@@ -21,44 +20,87 @@ class NovaPrinterPlugin {
     return false;
   }
 
-  static Future<List<EpsonPrinterModel>> onDiscovery({
-    EpsonEPOSPortType type = EpsonEPOSPortType.TCP,
+  static Future<List<Printer>> discoverPrinters({
+    Set<ConnectionMode> connectionModes = const {
+      ConnectionMode.TCP,
+      ConnectionMode.USB,
+    },
+  }) async {
+    final epsonPrinters = await onDiscoverEpsonPrinters(type: connectionModes);
+    //HERE WE NEED TO ADD DISCOVERY OF CITIZEN PRINTERS AS WELL
+
+    return [...epsonPrinters];
+  }
+
+  static Future<List<Printer>> onDiscoverEpsonPrinters({
+    Set<ConnectionMode> type = const {
+      ConnectionMode.TCP,
+      ConnectionMode.USB,
+    },
   }) async {
     try {
       if (!_isPrinterPlatformSupport(throwError: true)) throw Exception();
-      String printType = _eposHelper.getPortType(type);
-      String? rawResponseData =
-          await NovaPrinterPluginPlatform.instance.onDiscovery(
-        printType: printType,
-      );
-      if (rawResponseData == null) throw Exception();
-      final epsonPrinterResponse =
-          EpsonPrinterResponse.fromRawJson(rawResponseData);
-      if (kDebugMode) print(epsonPrinterResponse);
-
-      List<dynamic> printers = epsonPrinterResponse.content ?? [];
-
-      if (printers.isEmpty) throw Exception();
-
-      List<EpsonPrinterModel> map = printers.map(
+      List<dynamic> printersFound = [];
+      for (var connectionType in type) {
+        String tcp = _eposHelper.getPortType(connectionType);
+        EpsonPrinterResponse epsonPrinterResponse =
+            await _discoverPrintersByType(tcp);
+        printersFound.addAll(epsonPrinterResponse.content);
+      }
+      if (printersFound.isEmpty) throw Exception();
+      List<EpsonPrinterModel> map = printersFound.map(
         (e) {
           final modelName = e['model'];
           final modelSeries = _eposHelper.getSeries(modelName);
+          String ipAddress = e['ipAddress'] ?? '';
+          bool isUsbPrinter = ipAddress.isEmpty;
+          String connectionType = _eposHelper.getPortType(
+            isUsbPrinter ? ConnectionMode.TCP : ConnectionMode.USB,
+          );
+
           return EpsonPrinterModel(
             ipAddress: e['ipAddress'],
             bdAddress: e['bdAddress'],
             macAddress: e['macAddress'],
-            type: printType,
+            type: connectionType,
             model: modelName,
             series: modelSeries?.id,
             target: e['target'],
           );
         },
       ).toList();
-      return map;
+
+      List<Printer> printers = [];
+      for (EpsonPrinterModel element in map) {
+        EpsonPrinterModel device = element;
+        var json = device.toMap();
+        json['manufacturerName'] = ManufactureName.Epson.name;
+        json['connectionMode'] = json['type'];
+        json['displayName'] = json['model'];
+        json['properties'] = {};
+        json['properties'] = {...json};
+
+        var printer = Printer.fromJson(json);
+        printers.add(printer);
+      }
+      return printers;
     } catch (e) {
       return [];
     }
+  }
+
+  static Future<EpsonPrinterResponse> _discoverPrintersByType(
+    String printType,
+  ) async {
+    String? rawResponseData =
+        await NovaPrinterPluginPlatform.instance.onDiscovery(
+      printType: printType,
+    );
+    if (rawResponseData == null) throw Exception();
+    final epsonPrinterResponse =
+        EpsonPrinterResponse.fromRawJson(rawResponseData);
+    if (kDebugMode) print(epsonPrinterResponse);
+    return epsonPrinterResponse;
   }
 
   static Future<dynamic> onPrint({

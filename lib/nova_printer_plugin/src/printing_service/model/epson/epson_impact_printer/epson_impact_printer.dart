@@ -12,6 +12,14 @@ class EpsonImpactPrinter extends Printer {
 
   EpsonImpactPrinter({
     super.manufacturerName = ManufactureName.Epson,
+    super.refId,
+    super.displayName,
+    super.aliasName,
+    super.restaurantRefId,
+    super.connectionMode,
+    super.createdDate,
+    super.lastModifiedDate,
+    super.foundMatch = true,
     super.properties = const {},
   });
 

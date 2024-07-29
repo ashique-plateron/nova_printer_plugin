@@ -15,6 +15,9 @@ class CitizenPrinter extends Printer {
     super.aliasName,
   });
 
+  factory CitizenPrinter.fromJson(Map<String, dynamic> json) =>
+      _$CitizenPrinterFromJson(json);
+
   @override
   Future<PrintResult> print(List<PrintCommands> commands) async {
     try {

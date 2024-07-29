@@ -552,14 +552,16 @@ class EpsonEposPlugin(private val context: Context) {
                         "HIGH" -> Printer.LEVEL_H
                         else -> Printer.PARAM_DEFAULT
                     }
+                    mPrinter!!.addTextAlign(Printer.ALIGN_CENTER)
                     mPrinter!!.addSymbol(
                         data,
-                        Printer.SYMBOL_QRCODE_MODEL_1,
+                        Printer.SYMBOL_QRCODE_MODEL_2,
                         ecLevel,
                         size,
                         size,
                         3,
                         );
+                    mPrinter!!.addTextAlign(Printer.ALIGN_LEFT)
                 }
             }
         }

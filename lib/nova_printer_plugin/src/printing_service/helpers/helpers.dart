@@ -1,17 +1,15 @@
-import 'const.dart';
-import 'enums.dart';
-import 'models.dart';
+import 'package:nova_printer_plugin/plugin.dart';
 
 class EpsonEPOSHelper {
   EpsonEPOSHelper();
 
-   dynamic getPortType(EpsonEPOSPortType enumData, {bool returnInt = false}) {
+  dynamic getPortType(ConnectionMode enumData, {bool returnInt = false}) {
     switch (enumData) {
-      case EpsonEPOSPortType.TCP:
+      case ConnectionMode.TCP:
         return returnInt ? 1 : 'TCP';
-      case EpsonEPOSPortType.BLUETOOTH:
+      case ConnectionMode.BLUETOOTH:
         return returnInt ? 2 : 'BT';
-      case EpsonEPOSPortType.USB:
+      case ConnectionMode.USB:
         return returnInt ? 3 : 'USB';
       default:
         return returnInt ? 0 : 'ALL';
