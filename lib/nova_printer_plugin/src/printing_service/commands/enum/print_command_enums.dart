@@ -11,6 +11,7 @@ enum PrintCommandId {
   AddTextSmooth('addTextSmooth'),
   AddDivider("printText"),
   PrintQRCode("printQRCode"),
+  PrintRowWithColumn("printRowWithColumn"),
   ;
 
   final String value;

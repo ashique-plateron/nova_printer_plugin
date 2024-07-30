@@ -64,6 +64,7 @@ abstract class PrintCommandGenerator {
     bool bold = false,
   }) {
     return PrintTextCommand(
+      type: PrintCommandId.PrintRowWithColumn,
       attributes: RowWith2ColumnAttribute(
         text: columnText1,
         column2Text: columnText2,

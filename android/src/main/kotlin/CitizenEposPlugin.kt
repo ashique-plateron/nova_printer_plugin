@@ -140,7 +140,7 @@ class CitizenEposPlugin(val mContext: Context) {
 
                 var align = when (commandValue["alignment"]) {
                     "LEFT" -> ESCPOSConst.CMP_ALIGNMENT_LEFT
-                    "CENTER" -> ESCPOSConst.CMP_ALIGNMENT_CENTER
+                    "CENTRE" -> ESCPOSConst.CMP_ALIGNMENT_CENTER
                     "RIGHT" -> ESCPOSConst.CMP_ALIGNMENT_RIGHT
                     else -> ESCPOSConst.CMP_ALIGNMENT_LEFT
                 }
@@ -180,25 +180,25 @@ class CitizenEposPlugin(val mContext: Context) {
                         }
 
                         height = when (height) {
-                            0 -> ESCPOSConst.CMP_TXT_1HEIGHT
-                            1 -> ESCPOSConst.CMP_TXT_2HEIGHT
-                            2 -> ESCPOSConst.CMP_TXT_3HEIGHT
-                            3 -> ESCPOSConst.CMP_TXT_4HEIGHT
-                            4 -> ESCPOSConst.CMP_TXT_5HEIGHT
-                            5 -> ESCPOSConst.CMP_TXT_6HEIGHT
-                            6 -> ESCPOSConst.CMP_TXT_7HEIGHT
-                            7 -> ESCPOSConst.CMP_TXT_8HEIGHT
+                            1 -> ESCPOSConst.CMP_TXT_1HEIGHT
+                            2 -> ESCPOSConst.CMP_TXT_2HEIGHT
+                            3 -> ESCPOSConst.CMP_TXT_3HEIGHT
+                            4 -> ESCPOSConst.CMP_TXT_4HEIGHT
+                            5 -> ESCPOSConst.CMP_TXT_5HEIGHT
+                            6 -> ESCPOSConst.CMP_TXT_6HEIGHT
+                            7 -> ESCPOSConst.CMP_TXT_7HEIGHT
+                            8 -> ESCPOSConst.CMP_TXT_8HEIGHT
                             else -> ESCPOSConst.CMP_TXT_1HEIGHT
                         }
                         width = when (width) {
-                            0 -> ESCPOSConst.CMP_TXT_1WIDTH
-                            1 -> ESCPOSConst.CMP_TXT_2WIDTH
-                            2 -> ESCPOSConst.CMP_TXT_3WIDTH
-                            3 -> ESCPOSConst.CMP_TXT_4WIDTH
-                            4 -> ESCPOSConst.CMP_TXT_5WIDTH
-                            5 -> ESCPOSConst.CMP_TXT_6WIDTH
-                            6 -> ESCPOSConst.CMP_TXT_7WIDTH
-                            7 -> ESCPOSConst.CMP_TXT_8WIDTH
+                            1 -> ESCPOSConst.CMP_TXT_1WIDTH
+                            2 -> ESCPOSConst.CMP_TXT_2WIDTH
+                            3 -> ESCPOSConst.CMP_TXT_3WIDTH
+                            4 -> ESCPOSConst.CMP_TXT_4WIDTH
+                            5 -> ESCPOSConst.CMP_TXT_5WIDTH
+                            7 -> ESCPOSConst.CMP_TXT_6WIDTH
+                            8 -> ESCPOSConst.CMP_TXT_7WIDTH
+                            9 -> ESCPOSConst.CMP_TXT_8WIDTH
                             else -> ESCPOSConst.CMP_TXT_1WIDTH
                         }
 

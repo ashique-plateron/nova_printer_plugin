@@ -80,6 +80,9 @@ abstract class Printer {
         case PrintCommandId.PrintQRCode:
           commands.add(getPrintQrCommand(element));
           break;
+        case PrintCommandId.PrintRowWithColumn:
+          commands.add(getRowWith2ColumnCommand(element));
+          break;
       }
     }
     return commands;
