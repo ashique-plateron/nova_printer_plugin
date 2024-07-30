@@ -89,7 +89,7 @@ class PrintDividerAttribute extends PrintTextAttributes {
     this.symbol = '-',
     super.style,
     super.size,
-    super.alignment = PrintAlign.CENTRE,
+    super.alignment = PrintAlign.LEFT,
   }) : super(text: symbol);
 
   factory PrintDividerAttribute.fromJson(Map<String, dynamic> json) =>

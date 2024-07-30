@@ -19,7 +19,7 @@ class CitizenPrinter extends Printer {
   });
 
   @override
-  int get characterLength => 33;
+  int get characterLength => 46;
 
   factory CitizenPrinter.fromJson(Map<String, dynamic> json) =>
       _$CitizenPrinterFromJson(json);
