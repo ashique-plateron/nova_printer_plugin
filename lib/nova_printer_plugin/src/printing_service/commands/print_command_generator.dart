@@ -17,8 +17,9 @@ abstract class PrintCommandGenerator {
     );
   }
 
-  PrintCommands getDividerCommand(String symbol) {
+  PrintCommands getDividerCommand({String symbol = '-'}) {
     return PrintTextCommand(
+      type: PrintCommandId.AddDivider,
       attributes: PrintDividerAttribute(
         symbol: symbol,
       ),
@@ -37,16 +38,17 @@ abstract class PrintCommandGenerator {
     String text, {
     PrintAlign alignment = PrintAlign.LEFT,
     PrintFont fontType = PrintFont.FONT_A,
-    PrintTextStyle? style,
+    bool bold = false,
     PrintTextSize? size,
-    
   }) {
     return PrintTextCommand(
       attributes: PrintTextAttributes(
-        text: text,
+        text: "$text\n",
         alignment: alignment,
         fontType: fontType,
-        style: style,
+        style: PrintTextStyle(
+          bold: bold,
+        ),
         smoothenText: true,
         size: size,
       ),
@@ -54,11 +56,24 @@ abstract class PrintCommandGenerator {
   }
 
   PrintCommands getRowWithTwoColumnCommand(
-      String columnText1, String columnText2) {
+    String columnText1,
+    String columnText2, {
+    PrintAlign alignment = PrintAlign.LEFT,
+    PrintFont fontType = PrintFont.FONT_A,
+    PrintTextSize? size,
+    bool bold = false,
+  }) {
     return PrintTextCommand(
       attributes: RowWith2ColumnAttribute(
         text: columnText1,
         column2Text: columnText2,
+        alignment: alignment,
+        fontType: fontType,
+        style: PrintTextStyle(
+          bold: bold,
+        ),
+        smoothenText: true,
+        size: size,
       ),
     );
   }

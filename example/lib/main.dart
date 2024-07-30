@@ -72,7 +72,6 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> discoverPrinter() async {
     printers = await NovaPrinterPlugin.discoverPrinters();
-
     await findCitizenDevice();
     setState(() {});
   }
@@ -80,21 +79,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> printData({required Printer printer}) async {
     var imageData = await rootBundle.load('assets/test_print.jpg');
     var b = imageData.buffer.asUint8List();
-    await printer.print(
-      [
-        PrintImage(
-          attributes: PrintImageAttributes(
-            width: 500,
-            height: 400,
-            posX: 50,
-            posY: 50,
-            bitmap: b,
-            halftone: ImageHalfTone.HALFTONE_ERROR_DIFFUSION,
-          ),
-        ),
-        ..._commands
-      ],
-    );
+    await printer.print(getCommands());
   }
 
   Future<void> findCitizenDevice() async {
@@ -121,42 +106,60 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  final List<PrintCommands> _commands = [
-    AddTextSmoothCommand(
-      attributes: AddTextSmoothAttributes(
-        addTextSmooth: true,
-      ),
-    ),
-    PrintTextCommand(
-      attributes: PrintTextAttributes(
-        fontType: PrintFont.FONT_B,
-        text:
-            '''123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123''',
-        style: PrintTextStyle(bold: false),
-      ),
-    ),
-    PrintTextCommand(
-      type: PrintCommandId.AddDivider,
-      attributes: PrintDividerAttribute(
-        symbol: '-',
-        style: PrintTextStyle(bold: false),
-      ),
-    ),
-    AddFeedlineCommand(
-      attributes: FeedlineAttributes(lines: 10),
-    ),
-    PrintRawData(
-      attributes: PrintRawDataAttributes(
-        rawData: Uint8List.fromList([0, 2, 5, 7]),
-      ),
-    ),
-    PrintQRCommand(
-      attributes: PrintQRAttributes(
-        data: "https://www.google.com/",
-        size: 16,
-        alignment: PrintAlign.CENTRE,
-      ),
-    ),
-    AddCutCommand(),
-  ];
+  List<PrintCommands> getCommands() {
+    return TestCmdGenerator().commands;
+  }
+}
+
+class TestCmdGenerator extends PrintCommandGenerator {
+  List<PrintCommands> get commands => [
+        // PrintImage(
+        //   attributes: PrintImageAttributes(
+        //     width: 500,
+        //     height: 400,
+        //     posX: 50,
+        //     posY: 50,
+        //     bitmap: b,
+        //     halftone: ImageHalfTone.HALFTONE_ERROR_DIFFUSION,
+        //   ),
+        // ),
+        // AddTextSmoothCommand(
+        //   attributes: AddTextSmoothAttributes(
+        //     addTextSmooth: true,
+        //   ),
+        // ),
+        // PrintTextCommand(
+        //   attributes: PrintTextAttributes(
+        //     fontType: PrintFont.FONT_B,
+        //     text:
+        //         '''123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123''',
+        //     style: PrintTextStyle(bold: false),
+        //   ),
+        // ),
+        getDividerCommand(),
+
+        PrintTextCommand(
+          type: PrintCommandId.AddDivider,
+          attributes: PrintDividerAttribute(
+            symbol: '-',
+            style: PrintTextStyle(bold: false),
+          ),
+        ),
+        // AddFeedlineCommand(
+        //   attributes: FeedlineAttributes(lines: 10),
+        // ),
+        // PrintRawData(
+        //   attributes: PrintRawDataAttributes(
+        //     rawData: Uint8List.fromList([0, 2, 5, 7]),
+        //   ),
+        // ),
+        // PrintQRCommand(
+        //   attributes: PrintQRAttributes(
+        //     data: "https://www.google.com/",
+        //     size: 16,
+        //     alignment: PrintAlign.CENTRE,
+        //   ),
+        // ),
+        AddCutCommand(),
+      ];
 }

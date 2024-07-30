@@ -107,6 +107,11 @@ class RowWith2ColumnAttribute extends PrintTextAttributes {
   RowWith2ColumnAttribute({
     required super.text,
     required this.column2Text,
+    super.fontType,
+    super.alignment = PrintAlign.LEFT,
+    super.smoothenText = true,
+    super.size,
+    super.style,
   });
 
   factory RowWith2ColumnAttribute.fromJson(Map<String, dynamic> json) =>

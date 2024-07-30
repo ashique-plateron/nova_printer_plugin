@@ -404,7 +404,7 @@ class EpsonEposPlugin(private val context: Context) {
                     var textAlign = Printer.PARAM_DEFAULT;
                     when (alignment) {
                         "LEFT" -> textAlign = Printer.ALIGN_LEFT
-                        "CENTER" -> textAlign = Printer.ALIGN_CENTER
+                        "CENTRE" -> textAlign = Printer.ALIGN_CENTER
                         "RIGHT" -> textAlign = Printer.ALIGN_RIGHT
                     }
 
