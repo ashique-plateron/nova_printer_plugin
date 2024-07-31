@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:nova_printer_plugin/plugin.dart';
-import 'package:usb_serial_for_android/usb_serial_for_android.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,7 +49,8 @@ class _MyAppState extends State<MyApp> {
                       Printer printer = printers[index];
                       return Row(
                         children: [
-                          Text((" ${printer.displayName}")),
+                          Text(
+                              (" ${printer.manufacturerName.name} ${printer.properties['series']}")),
                           const Spacer(),
                           ElevatedButton(
                             onPressed: () {
@@ -72,7 +73,9 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> discoverPrinter() async {
     printers = await NovaPrinterPlugin.discoverPrinters();
+    // await findCitizenDevice();
     await findCitizenDevice();
+
     setState(() {});
   }
 
@@ -82,32 +85,46 @@ class _MyAppState extends State<MyApp> {
     await printer.print(getCommands());
   }
 
-  Future<void> findCitizenDevice() async {
-    List<UsbDevice> devices = await UsbSerial.listDevices();
-    for (var device in devices) {
-      var json = device.toJson();
-      ManufactureName manufacturer =
-          ManufactureName.fromValue(device.manufacturerName?.trim());
-      bool isCitizenPrinter = manufacturer == ManufactureName.Citizen &&
-          (device.productName?.toLowerCase().contains('printer') ?? false);
-      json['manufacturerName'] = ManufactureName.Citizen.name;
-      json['displayName'] = json['productName'];
-      json['connectionMode'] = ConnectionMode.USB.value;
-      json['properties'] = {
-        'deviceName': device.deviceName,
-        'deviceId': device.deviceId,
-        'productName': device.productName,
-        'vid': device.vid,
-        "pid": device.pid,
-        "serial": device.serial,
-        "port": device.port,
-      };
-      if (isCitizenPrinter) printers.add(Printer.fromJson(json));
-    }
-  }
-
   List<PrintCommands> getCommands() {
     return TestCmdGenerator().commands;
+  }
+
+  Future<void> findCitizenDevice() async {
+    try {
+      List<Map<String, dynamic>> discoveredUSBDevices =
+          await FlutterUsbPrinter.getUSBDeviceList();
+
+      for (var device in discoveredUSBDevices) {
+        var json = device;
+        bool isPrinter = (json['productName'] ?? '')
+            .toString()
+            .toLowerCase()
+            .contains('printer');
+
+        var manufacturerIsCitizen =
+            ManufactureName.fromValue(json['manufacturer']) ==
+                ManufactureName.Citizen;
+
+        bool isCitizenPrinter = manufacturerIsCitizen && isPrinter;
+        if (isCitizenPrinter) {
+          json['manufacturerName'] = ManufactureName.Citizen.name;
+          json['displayName'] = json['productName'];
+          json['connectionMode'] = ConnectionMode.USB.value;
+          json['properties'] = {
+            'deviceName': device['deviceName'],
+            'deviceId': device['deviceId'],
+            'productName': device['productName'],
+            'vid': device['vid'],
+            "pid": device['pid'],
+            "serial": device['serial'],
+            "port": device['port'],
+          };
+          printers.add(Printer.fromJson(json));
+        }
+      }
+    } on Exception {
+      rethrow;
+    }
   }
 }
 
@@ -128,6 +145,19 @@ class TestCmdGenerator extends PrintCommandGenerator {
         //     addTextSmooth: true,
         //   ),
         // ),
+
+        // getTextCommand(
+        //   '''12345678901234567890123456789012345678901234567890''',
+        //   size: textSizeSmall,
+        // ),
+        // getTextCommand(
+        //   '''12345678901234567890123456789012345678901234567890''',
+        //   size: textSizeMedium,
+        // ),
+        // getTextCommand(
+        //   '''12345678901234567890123456789012345678901234567890''',
+        //   size: textSizeLarge,
+        // ),
         // PrintTextCommand(
         //   attributes: PrintTextAttributes(
         //     fontType: PrintFont.FONT_B,
@@ -136,18 +166,11 @@ class TestCmdGenerator extends PrintCommandGenerator {
         //     style: PrintTextStyle(bold: false),
         //   ),
         // ),
-        getDividerCommand(),
+        // getDividerCommand(),
 
-        PrintTextCommand(
-          type: PrintCommandId.AddDivider,
-          attributes: PrintDividerAttribute(
-            symbol: '-',
-            style: PrintTextStyle(bold: false),
-          ),
+        AddFeedlineCommand(
+          attributes: FeedlineAttributes(lines: 5),
         ),
-        // AddFeedlineCommand(
-        //   attributes: FeedlineAttributes(lines: 10),
-        // ),
         // PrintRawData(
         //   attributes: PrintRawDataAttributes(
         //     rawData: Uint8List.fromList([0, 2, 5, 7]),
@@ -160,6 +183,13 @@ class TestCmdGenerator extends PrintCommandGenerator {
         //     alignment: PrintAlign.CENTRE,
         //   ),
         // ),
-        AddCutCommand(),
+
+        getRowWithTwoColumnCommand(
+          "Menu Name",
+          "QTY",
+          size: textSizeSmall,
+        ),
+
+        // AddCutCommand(),
       ];
 }

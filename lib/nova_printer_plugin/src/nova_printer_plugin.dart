@@ -55,7 +55,7 @@ class NovaPrinterPlugin {
           String ipAddress = e['ipAddress'] ?? '';
           bool isUsbPrinter = ipAddress.isEmpty;
           String connectionType = _eposHelper.getPortType(
-            isUsbPrinter ? ConnectionMode.TCP : ConnectionMode.USB,
+            isUsbPrinter ? ConnectionMode.USB : ConnectionMode.TCP,
           );
 
           return EpsonPrinterModel(
