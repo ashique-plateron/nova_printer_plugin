@@ -24,12 +24,12 @@ class NovaPrinterPlugin : FlutterPlugin, MethodCallHandler {
     private lateinit var context: Context
     private var logTag: String = "Nova_Printer_Plugin"
     private lateinit var epsonEposPlugin: EpsonEposPlugin
-    private lateinit var citizenFunctions: CitizenFunctions
+    private lateinit var citizenEposPlugin: CitizenEposPlugin
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         context = flutterPluginBinding.applicationContext
         epsonEposPlugin = EpsonEposPlugin(context)
-        citizenFunctions = CitizenFunctions(context)
+        citizenEposPlugin = CitizenEposPlugin(context)
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "nova_printer_plugin")
         channel.setMethodCallHandler(this)
         Log.setLogSettings(
@@ -91,7 +91,7 @@ class NovaPrinterPlugin : FlutterPlugin, MethodCallHandler {
                 }
 
                 "onCitizenPrint" -> {
-                    citizenFunctions.onPrintCitizen(call, result)
+                    citizenEposPlugin.onPrintCitizen(call, result)
                 }
 
                 else -> {

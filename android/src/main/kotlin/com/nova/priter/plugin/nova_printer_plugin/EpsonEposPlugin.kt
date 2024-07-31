@@ -15,6 +15,7 @@ import com.epson.epos2.printer.PrinterSettingListener
 import com.epson.epos2.printer.PrinterStatusInfo
 import com.epson.epos2.printer.ReceiveListener
 import com.google.gson.Gson
+import com.nova.priter.plugin.nova_printer_plugin.PrinterResult
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel.Result
 
@@ -36,12 +37,6 @@ class EpsonEposPrinterInfo(
     var target: String? = null
 ) : JSONConvertable
 
-data class EpsonEposPrinterResult(
-    var type: String,
-    var success: Boolean,
-    var message: String? = null,
-    var content: Any? = null
-) : JSONConvertable
 
 /** EpsonEposPlugin */
 @Suppress("CAST_NEVER_SUCCEEDS")
@@ -59,7 +54,7 @@ class EpsonEposPlugin(private val context: Context) {
     /**
      * Stop discovery printer
      */
-    fun stopDiscovery() {
+    private fun stopDiscovery() {
         try {
             Discovery.stop()
         } catch (e: Epos2Exception) {
@@ -96,7 +91,7 @@ class EpsonEposPlugin(private val context: Context) {
         printers.clear()
         val filter = FilterOption()
         filter.portType = Discovery.PORTTYPE_TCP
-        val resp = EpsonEposPrinterResult("onDiscoveryTCP", false)
+        val resp = PrinterResult("onDiscoveryTCP", false)
         try {
             Discovery.start(context, filter, mDiscoveryListener)
             Handler(Looper.getMainLooper()).postDelayed({
@@ -123,7 +118,7 @@ class EpsonEposPlugin(private val context: Context) {
         printers.clear()
         val filter = FilterOption()
         filter.portType = Discovery.PORTTYPE_USB
-        val resp = EpsonEposPrinterResult("onDiscoveryUSB", false)
+        val resp = PrinterResult("onDiscoveryUSB", false)
         try {
             Discovery.start(context, filter, mDiscoveryListener)
             Handler(Looper.getMainLooper()).postDelayed({
@@ -157,7 +152,7 @@ class EpsonEposPlugin(private val context: Context) {
         val series: String = call.argument<String>("series") as String
         val target: String = call.argument<String>("target") as String
 
-        val resp = EpsonEposPrinterResult("onPrint${type}", false)
+        val resp = PrinterResult("onPrint${type}", false)
         try {
             if (!connectPrinter(target, series)) {
                 resp.success = false
@@ -188,7 +183,7 @@ class EpsonEposPlugin(private val context: Context) {
         val printDensity: Int? = call.argument<String>("print_density") as? Int
         val printSpeed: Int? = call.argument<String>("print_speed") as? Int
 
-        val resp = EpsonEposPrinterResult("onPrint${type}", false)
+        val resp = PrinterResult("onPrint${type}", false)
         try {
             if (!connectPrinter(target, series)) {
                 resp.success = false
@@ -243,7 +238,7 @@ class EpsonEposPlugin(private val context: Context) {
 
         val commands: ArrayList<Map<String, Any>> =
             call.argument<ArrayList<Map<String, Any>>>("commands") as ArrayList<Map<String, Any>>
-        val resp = EpsonEposPrinterResult("onPrint${type}", false)
+        val resp = PrinterResult("onPrint${type}", false)
         try {
             if (!connectPrinter(target, series)) {
                 if (mPrinter != null) {
@@ -252,7 +247,7 @@ class EpsonEposPlugin(private val context: Context) {
                 resp.success = false
                 resp.message = "Can not connect to the printer."
                 result.success(resp.toJSON())
-                Log.e("logTag", "Cannot ConnectPrinter $resp")
+                Log.e(logTag, "Cannot ConnectPrinter $resp")
             } else {
                 mPrinter!!.clearCommandBuffer()
                 commands.forEach {
@@ -315,11 +310,16 @@ class EpsonEposPlugin(private val context: Context) {
                 deviceInfo.deviceType.toString(),
                 deviceInfo.target
             )
-            val printerIndex = printers.indexOfFirst { e -> e.ipAddress == deviceInfo.ipAddress }
-            if (printerIndex > -1) {
-                printers[printerIndex] = printer
+            if (printer.target?.contains("TCPS") == true) {
+                Log.e("Invalid Printer", printer.target.toString())
             } else {
-                printers.add(printer)
+                val printerIndex =
+                    printers.indexOfFirst { e -> e.ipAddress == deviceInfo.ipAddress }
+                if (printerIndex > -1) {
+                    printers[printerIndex] = printer
+                } else {
+                    printers.add(printer)
+                }
             }
         }
 
@@ -335,7 +335,7 @@ class EpsonEposPlugin(private val context: Context) {
         }
     }
 
-    fun connectPrinter(target: String, series: String): Boolean {
+    private fun connectPrinter(target: String, series: String): Boolean {
         val printCons = getPrinterConstant(series)
         if (mPrinter == null || mTarget != target) {
             if (mPrinter != null) {
@@ -404,7 +404,7 @@ class EpsonEposPlugin(private val context: Context) {
                     var textAlign = Printer.PARAM_DEFAULT;
                     when (alignment) {
                         "LEFT" -> textAlign = Printer.ALIGN_LEFT
-                        "CENTER" -> textAlign = Printer.ALIGN_CENTER
+                        "CENTRE" -> textAlign = Printer.ALIGN_CENTER
                         "RIGHT" -> textAlign = Printer.ALIGN_RIGHT
                     }
 
@@ -539,11 +539,11 @@ class EpsonEposPlugin(private val context: Context) {
                     }
                 }
 
-                "printQRCode"->{
+                "printQRCode" -> {
                     var data: String? = commandValue["data"] as? String
                         ?: throw RuntimeException("COMMAND ID :$commandId | error: QR DATA IS NULL $commandValue ")
 
-                    var size = commandValue["size"] as? Int?:3
+                    var size = commandValue["size"] as? Int ?: 3
 
                     var ecLevel = when (commandValue["errorCorrectionLevel"]) {
                         "LOW" -> Printer.LEVEL_L
@@ -552,14 +552,16 @@ class EpsonEposPlugin(private val context: Context) {
                         "HIGH" -> Printer.LEVEL_H
                         else -> Printer.PARAM_DEFAULT
                     }
+                    mPrinter!!.addTextAlign(Printer.ALIGN_CENTER)
                     mPrinter!!.addSymbol(
                         data,
-                        Printer.SYMBOL_QRCODE_MODEL_1,
+                        Printer.SYMBOL_QRCODE_MODEL_2,
                         ecLevel,
                         size,
                         size,
                         3,
-                        );
+                    );
+                    mPrinter!!.addTextAlign(Printer.ALIGN_LEFT)
                 }
             }
         }

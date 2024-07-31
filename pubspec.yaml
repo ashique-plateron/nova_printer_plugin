@@ -14,6 +14,9 @@ dependencies:
   plugin_platform_interface: ^2.0.2
   json_annotation: 4.8.1
   json_serializable: 6.7.1
+  # async: ^2.9.0
+  # collection: ^1.16.0
+  flutter_usb_printer: 0.1.0+1
 
 dev_dependencies:
   flutter_test:
@@ -41,17 +44,19 @@ flutter:
       android:
         package: com.nova.priter.plugin.nova_printer_plugin
         pluginClass: NovaPrinterPlugin
-      ios:
-        pluginClass: NovaPrinterPlugin
-      linux:
-        pluginClass: NovaPrinterPlugin
-      macos:
-        pluginClass: NovaPrinterPlugin
-      windows:
-        pluginClass: NovaPrinterPluginCApi
-      web:
-        pluginClass: NovaPrinterPluginWeb
-        fileName: nova_printer_plugin_web.dart
+        # package2: com.eyanef.usb_serial_for_android
+        # pluginClass2: UsbSerialForAndroidPlugin
+      # ios:
+      #   pluginClass: NovaPrinterPlugin
+      # linux:
+      #   pluginClass: NovaPrinterPlugin
+      # macos:
+      #   pluginClass: NovaPrinterPlugin
+      # windows:
+      #   pluginClass: NovaPrinterPluginCApi
+      # web:
+      #   pluginClass: NovaPrinterPluginWeb
+      #   fileName: nova_printer_plugin_web.dart
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
