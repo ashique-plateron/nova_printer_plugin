@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:nova_printer_plugin/plugin.dart';
 
 import 'method_channel/nova_printer_plugin_platform_interface.dart';
@@ -26,10 +27,14 @@ class NovaPrinterPlugin {
       ConnectionMode.USB,
     },
   }) async {
+    List<Printer> printers = [];
     final epsonPrinters = await onDiscoverEpsonPrinters(type: connectionModes);
-    //HERE WE NEED TO ADD DISCOVERY OF CITIZEN PRINTERS AS WELL
-
-    return [...epsonPrinters];
+    printers.addAll(epsonPrinters);
+    if (connectionModes.contains(ConnectionMode.USB)) {
+      final citizenPrinters = await findCitizenDevice();
+      printers.addAll(citizenPrinters);
+    }
+    return printers;
   }
 
   static Future<List<Printer>> onDiscoverEpsonPrinters({
@@ -111,6 +116,46 @@ class NovaPrinterPlugin {
       printer: printer,
       commands: commands,
     );
+  }
+
+  static Future<List<Printer>> findCitizenDevice() async {
+    List<Printer> printers = [];
+    try {
+      List<Map<String, dynamic>> discoveredUSBDevices =
+          await FlutterUsbPrinter.getUSBDeviceList();
+
+      for (var device in discoveredUSBDevices) {
+        var json = device;
+        bool isPrinter = (json['productName'] ?? '')
+            .toString()
+            .toLowerCase()
+            .contains('printer');
+
+        var manufacturerIsCitizen =
+            ManufactureName.fromValue(json['manufacturer']) ==
+                ManufactureName.Citizen;
+
+        bool isCitizenPrinter = manufacturerIsCitizen && isPrinter;
+        if (isCitizenPrinter) {
+          json['manufacturerName'] = ManufactureName.Citizen.name;
+          json['displayName'] = json['productName'];
+          json['connectionMode'] = ConnectionMode.USB.value;
+          json['properties'] = {
+            'deviceName': device['deviceName'],
+            'deviceId': device['deviceId'],
+            'productName': device['productName'],
+            'vid': device['vid'],
+            "pid": device['pid'],
+            "serial": device['serial'],
+            "port": device['port'],
+          };
+          printers.add(Printer.fromJson(json));
+        }
+      }
+      return printers;
+    } on Exception {
+      rethrow;
+    }
   }
 
   Future<dynamic> getPrinterSetting({
