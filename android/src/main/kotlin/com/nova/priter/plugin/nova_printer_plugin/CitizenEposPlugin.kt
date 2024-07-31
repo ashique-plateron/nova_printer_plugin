@@ -16,116 +16,109 @@ class CitizenEposPlugin(val mContext: Context) {
     private var logTag: String = "Nova_Printer_Plugin"
 
 
-    fun onPrintCitizen(call: MethodCall, result: Result): Boolean {
+    fun onPrintCitizen(call: MethodCall, result: Result) {
         var posPtr = ESCPOSPrinter();
         posPtr.setContext(mContext)
         val usbDevice: UsbDevice? = null
-        var result: Int
 
-        //Arguments
+        var responseCode: Int = ESCPOSConst.CMP_SUCCESS;
         val commands: ArrayList<Map<String, Any>> =
             call.argument<ArrayList<Map<String, Any>>>("commands") as ArrayList<Map<String, Any>>
         val connectionType = call.argument<String?>("type");
         var address = call.argument<String?>("target") ?: ""
-
-        if (commands == null || posPtr == null) return false
-
-        var type = when (connectionType) {
-            "USB" -> ESCPOSConst.CMP_PORT_USB
-            "WIFI" -> ESCPOSConst.CMP_PORT_WiFi
-            "BLUETOOTH" -> ESCPOSConst.CMP_PORT_Bluetooth
-            else -> ESCPOSConst.CMP_PORT_USB
-        }
-
-        // Connect
-        var connected = connect(posPtr, type, usbDevice, address);
-        if (!connected) return false
-
-        // Printer Check
-        result = posPtr.printerCheck()
-        if (ESCPOSConst.CMP_SUCCESS != result) return false
-
-        // Get Status
-        result = posPtr.status()
-        if (ESCPOSConst.CMP_STS_NORMAL != result) return false
-
-        // Character set
-        result = posPtr.setEncoding("ISO-8859-1") // Latin-1
-
-        //result = posPtr.setEncoding( "Shift_JIS" );		// Japanese 日本語を印字する場合は、この行を有効にしてください.
-        if (ESCPOSConst.CMP_SUCCESS != result) return false
-
+        val resp = PrinterResult("onPrintCitizen${connectionType}", false)
         try {
+            //Arguments
+            if (commands == null || posPtr == null) throw RuntimeException("commands ${commands == null} || printer: ${posPtr == null} ")
+
+            var type = when (connectionType) {
+                "USB" -> ESCPOSConst.CMP_PORT_USB
+                "WIFI" -> ESCPOSConst.CMP_PORT_WiFi
+                "BLUETOOTH" -> ESCPOSConst.CMP_PORT_Bluetooth
+                else -> ESCPOSConst.CMP_PORT_USB
+            }
+
+            // Connect
+            responseCode = connect(posPtr, type, usbDevice, address);
+            if (responseCode != ESCPOSConst.CMP_SUCCESS) throw RuntimeException("message: Failed to connect ,type:$type, address:${address}}")
+
+            // Printer Check
+            responseCode = posPtr.printerCheck()
+            if (ESCPOSConst.CMP_SUCCESS != responseCode) throw RuntimeException("message: Failed printerCheck()")
+
+            // Get Status
+            responseCode = posPtr.status()
+            if (ESCPOSConst.CMP_STS_NORMAL != responseCode) throw RuntimeException("message: Failed status()")
+
+            // Character set
+            responseCode = posPtr.setEncoding("ISO-8859-1") // Latin-1
+
+            //result = posPtr.setEncoding( "Shift_JIS" );		// Japanese 日本語を印字する場合は、この行を有効にしてください.
+            if (ESCPOSConst.CMP_SUCCESS != responseCode) throw RuntimeException("message: Failed setEncoding( ISO-8859-1 )")
+
+
             // Start Transaction ( Batch )
-            result = posPtr.transactionPrint(ESCPOSConst.CMP_TP_TRANSACTION)
-            if (ESCPOSConst.CMP_SUCCESS != result) throw RuntimeException()
+            responseCode = posPtr.transactionPrint(ESCPOSConst.CMP_TP_TRANSACTION)
+            if (ESCPOSConst.CMP_SUCCESS != responseCode) throw RuntimeException("message: Failed to Start transactionPrint(${ESCPOSConst.CMP_TP_TRANSACTION})")
 
             commands.forEach {
                 onGenerateCommand(posPtr, it)
             }
 
             // End Transaction ( Batch )
-            result = posPtr.transactionPrint(ESCPOSConst.CMP_TP_NORMAL)
-            if (ESCPOSConst.CMP_SUCCESS != result) {
-                throw RuntimeException()
-            } else {
-                //DISCONNECT AFTER SUCCESSFUL PRINT
-                disconnect(posPtr)
-                Log.e(
-                    "CITIZEN PRINTER",
-                    "DISCONNECTED {result:${result}}",
-                );
-            }
+            responseCode = posPtr.transactionPrint(ESCPOSConst.CMP_TP_NORMAL)
+
+            if (ESCPOSConst.CMP_SUCCESS != responseCode) throw RuntimeException("message: Failed to End transactionPrint(${ESCPOSConst.CMP_TP_NORMAL})")
+            //DISCONNECT AFTER SUCCESSFUL PRINT
+             responseCode = disconnect(posPtr)
+            if (ESCPOSConst.CMP_SUCCESS != responseCode) throw RuntimeException("message: Failed disconnect()")
+
+            posPtr.clearOutput()
+
+            resp.success = true
+            resp.message = "Printed $address ${posPtr.modelName} | ERROR CODE $responseCode"
+            var respJson = resp.toJSON();
+            Log.e(
+                "CITIZEN PRINTER",
+                "DISCONNECTED $respJson",
+            );
+            result.success(respJson)
+
         } catch (e: RuntimeException) {
             // Clear all buffered output data by transactionPrint.
             posPtr.clearOutput()
-            return false
+            resp.success = false
+            resp.message = e.message
+            result.success(resp.toJSON())
+            Log.e(logTag, "Error [ERROR CODE ${responseCode}] onPrintCitizen $resp")
         }
 
-        return true
+
     }
 
     private fun connect(
-        posPtr: ESCPOSPrinter?,
+        posPtr: ESCPOSPrinter,
         connectType: Int,
         usbDevice: UsbDevice?,
         addr: String,
-    ): Boolean {
-        if (posPtr == null) return false
-        var bRet = false
+    ): Int {
         var result = 0;
-
         result = when (connectType) {
             // Connect to USB
-            ESCPOSConst.CMP_PORT_USB -> {
-                posPtr.connect(connectType, usbDevice)
-            }
+            ESCPOSConst.CMP_PORT_USB ->  posPtr.connect(connectType, usbDevice)
             // Connect to WIFI
-            ESCPOSConst.CMP_PORT_WiFi -> {
-                posPtr.connect(connectType, addr)
-            }
+            ESCPOSConst.CMP_PORT_WiFi -> posPtr.connect(connectType, addr)
             // Connect to BLUETOOTH
-            ESCPOSConst.CMP_PORT_Bluetooth -> {
-                posPtr.connect(connectType, addr)
-            }
-
-            else -> {
-                // Unknown connection type
-                return false
-            }
+            ESCPOSConst.CMP_PORT_Bluetooth -> posPtr.connect(connectType, addr)
+            // Unknown connection type
+            else -> ESCPOSConst.CMP_E_NOTCONNECT;
         }
         // connect() Success
-        bRet = ESCPOSConst.CMP_SUCCESS == result;
-        return bRet
+        return result
     }
 
-    private fun disconnect(posPtr: ESCPOSPrinter?): Boolean {
-        var bRet = false
-        if (posPtr == null) return bRet
-        // Disconnect
-        val result = posPtr.disconnect()
-        bRet = ESCPOSConst.CMP_SUCCESS == result
-        return bRet
+    private fun disconnect(posPtr: ESCPOSPrinter): Int {
+        return posPtr.disconnect()
     }
 
     private fun onGenerateCommand(posPtr: ESCPOSPrinter, command: Map<String, Any>) {

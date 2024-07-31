@@ -115,8 +115,8 @@ class EPSONSeries {
 ///
 /// Response
 ///
-class EpsonPrinterResponse {
-  EpsonPrinterResponse({
+class PrinterResponse {
+  PrinterResponse({
     required this.type,
     required this.success,
     this.message,
@@ -128,26 +128,26 @@ class EpsonPrinterResponse {
   String? message;
   dynamic content;
 
-  EpsonPrinterResponse copyWith({
+  PrinterResponse copyWith({
     required String type,
     required bool success,
     String? message,
     dynamic content,
   }) =>
-      EpsonPrinterResponse(
+      PrinterResponse(
         type: type,
         success: success,
         message: message ?? this.message,
         content: content ?? this.content,
       );
 
-  factory EpsonPrinterResponse.fromRawJson(String str) =>
-      EpsonPrinterResponse.fromJson(json.decode(str));
+  factory PrinterResponse.fromRawJson(String str) =>
+      PrinterResponse.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory EpsonPrinterResponse.fromJson(Map<String, dynamic> json) =>
-      EpsonPrinterResponse(
+  factory PrinterResponse.fromJson(Map<String, dynamic> json) =>
+      PrinterResponse(
         type: json["type"],
         success: json["success"],
         message: json["message"],

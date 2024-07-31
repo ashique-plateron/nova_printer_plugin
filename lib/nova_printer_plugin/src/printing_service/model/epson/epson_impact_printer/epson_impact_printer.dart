@@ -40,13 +40,12 @@ class EpsonImpactPrinter extends Printer {
             commands: getCommands(commands),
           );
           if (printResult != null) {
-            EpsonPrinterResponse r =
-                EpsonPrinterResponse.fromRawJson(printResult);
-            if (!r.success) return PrintResult.failed;
+            PrinterResponse r = PrinterResponse.fromRawJson(printResult);
+            return r.success ? PrintResult.success : PrintResult.failed;
           }
         },
       );
-      return PrintResult.success;
+      return PrintResult.inQueue;
     } catch (e) {
       rethrow;
     }

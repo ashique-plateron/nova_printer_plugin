@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:nova_printer_plugin/nova_printer_plugin/src/printing_service/queue/printer_queue.dart';
 import 'package:nova_printer_plugin/plugin.dart';
 
 part 'citizen_printer.g.dart';
@@ -27,11 +28,20 @@ class CitizenPrinter extends Printer {
   @override
   Future<PrintResult> print(List<PrintCommands> commands) async {
     try {
-      var printResult = await NovaPrinterPlugin.onCitizenPrint(
-        printer: this,
-        params: getCommands(commands),
+      PrinterQueue().addToQueue(
+        () async {
+          var printResult = await NovaPrinterPlugin.onCitizenPrint(
+            printer: this,
+            params: getCommands(commands),
+          );
+          if (printResult != null) {
+            PrinterResponse r = PrinterResponse.fromRawJson(printResult);
+            return r.success ? PrintResult.success : PrintResult.failed;
+          }
+        },
       );
-      return PrintResult.success;
+
+      return PrintResult.inQueue;
     } catch (e) {
       rethrow;
     }

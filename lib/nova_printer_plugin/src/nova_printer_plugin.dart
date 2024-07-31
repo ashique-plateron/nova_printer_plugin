@@ -48,7 +48,7 @@ class NovaPrinterPlugin {
       List<dynamic> printersFound = [];
       for (var connectionType in type) {
         String tcp = _eposHelper.getPortType(connectionType);
-        EpsonPrinterResponse epsonPrinterResponse =
+        PrinterResponse epsonPrinterResponse =
             await _discoverPrintersByType(tcp);
         printersFound.addAll(epsonPrinterResponse.content);
       }
@@ -94,7 +94,7 @@ class NovaPrinterPlugin {
     }
   }
 
-  static Future<EpsonPrinterResponse> _discoverPrintersByType(
+  static Future<PrinterResponse> _discoverPrintersByType(
     String printType,
   ) async {
     String? rawResponseData =
@@ -102,8 +102,7 @@ class NovaPrinterPlugin {
       printType: printType,
     );
     if (rawResponseData == null) throw Exception();
-    final epsonPrinterResponse =
-        EpsonPrinterResponse.fromRawJson(rawResponseData);
+    final epsonPrinterResponse = PrinterResponse.fromRawJson(rawResponseData);
     if (kDebugMode) print(epsonPrinterResponse);
     return epsonPrinterResponse;
   }

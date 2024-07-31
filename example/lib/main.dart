@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:nova_printer_plugin/plugin.dart';
 
 void main() {
@@ -74,7 +73,6 @@ class _MyAppState extends State<MyApp> {
   Future<void> discoverPrinter() async {
     printers = await NovaPrinterPlugin.discoverPrinters();
     // await findCitizenDevice();
-    await findCitizenDevice();
 
     setState(() {});
   }
@@ -87,44 +85,6 @@ class _MyAppState extends State<MyApp> {
 
   List<PrintCommands> getCommands() {
     return TestCmdGenerator().commands;
-  }
-
-  Future<void> findCitizenDevice() async {
-    try {
-      List<Map<String, dynamic>> discoveredUSBDevices =
-          await FlutterUsbPrinter.getUSBDeviceList();
-
-      for (var device in discoveredUSBDevices) {
-        var json = device;
-        bool isPrinter = (json['productName'] ?? '')
-            .toString()
-            .toLowerCase()
-            .contains('printer');
-
-        var manufacturerIsCitizen =
-            ManufactureName.fromValue(json['manufacturer']) ==
-                ManufactureName.Citizen;
-
-        bool isCitizenPrinter = manufacturerIsCitizen && isPrinter;
-        if (isCitizenPrinter) {
-          json['manufacturerName'] = ManufactureName.Citizen.name;
-          json['displayName'] = json['productName'];
-          json['connectionMode'] = ConnectionMode.USB.value;
-          json['properties'] = {
-            'deviceName': device['deviceName'],
-            'deviceId': device['deviceId'],
-            'productName': device['productName'],
-            'vid': device['vid'],
-            "pid": device['pid'],
-            "serial": device['serial'],
-            "port": device['port'],
-          };
-          printers.add(Printer.fromJson(json));
-        }
-      }
-    } on Exception {
-      rethrow;
-    }
   }
 }
 
@@ -158,14 +118,14 @@ class TestCmdGenerator extends PrintCommandGenerator {
         //   '''12345678901234567890123456789012345678901234567890''',
         //   size: textSizeLarge,
         // ),
-        // PrintTextCommand(
-        //   attributes: PrintTextAttributes(
-        //     fontType: PrintFont.FONT_B,
-        //     text:
-        //         '''123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123''',
-        //     style: PrintTextStyle(bold: false),
-        //   ),
-        // ),
+        PrintTextCommand(
+          attributes: PrintTextAttributes(
+            fontType: PrintFont.FONT_B,
+            text:
+                '''123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123123456789012345678901231234567890123456789012312345678901234567890123''',
+            style: PrintTextStyle(bold: false),
+          ),
+        ),
         // getDividerCommand(),
 
         AddFeedlineCommand(
@@ -190,6 +150,6 @@ class TestCmdGenerator extends PrintCommandGenerator {
           size: textSizeSmall,
         ),
 
-        // AddCutCommand(),
+        AddCutCommand(),
       ];
 }
