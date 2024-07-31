@@ -7,7 +7,7 @@ part 'epson_printer.g.dart';
 @JsonSerializable()
 class EpsonPrinter extends Printer {
   @override
-  int get characterLength => 46;
+  int get characterLength => 42;
   EpsonPrinter({
     super.manufacturerName = ManufactureName.Epson,
     super.properties = const {},

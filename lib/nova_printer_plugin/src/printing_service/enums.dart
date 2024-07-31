@@ -33,6 +33,7 @@ enum ConnectionMode {
   ) =>
       ConnectionMode.values.firstWhere(
         (element) => element.value == value,
+        orElse: () => TCP,
       );
 }
 
